@@ -1,0 +1,55 @@
+version: '3'
+services:
+  # ----------------------------------------------------------
+  # The Web Serivce
+  # ----------------------------------------------------------
+  # This is the entry point for seeing the app in a browser
+  # You can view your app at localhost:8000
+  laravel-web:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.web
+    volumes:
+      - ./:/var/www
+    container_name: laravel-web
+    ports: 
+      - "8002:80"
+    links:
+      - laravel-app
+    depends_on:
+      - laravel-app
+  # ----------------------------------------------------------
+  # The App Service
+  # ----------------------------------------------------------
+  # This is the container that runs the app. The web services
+  # runs it via a proxy.
+  laravel-app:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.app
+    container_name: laravel-app
+    volumes:
+      - ./:/var/www
+    links:
+     - laravel-db
+    depends_on:
+      - laravel-db     
+  # ----------------------------------------------------------
+  # The DB Service
+  # ----------------------------------------------------------
+  # This is the main db for the app.
+  laravel-db:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.db
+    ports:
+      - '33062:3306'
+    container_name: laravel-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_USER=laravel_user
+      - MYSQL_PASSWORD=laravel_password
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=laravel
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql
